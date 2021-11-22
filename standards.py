@@ -17,3 +17,9 @@ VI  = 9
 VII = 11
 
 sIV = 6
+
+standards = {
+    "Rhythm":
+        (M(I), dom(VI), m(II), dom(V), m(III), dom(VI), m(II), dom(V),
+        dom(I), dom(I), dom(IV), dom(sIV), M(I), dom(VI), m(II), dom(V))
+}

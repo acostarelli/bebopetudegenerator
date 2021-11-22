@@ -3,3 +3,9 @@ context of an existing harmony, and puts them one after the other.
 
 The conditions for putting one lick after another lick will at first be random.
 Then you can add some "sentience" to make it more musical.
+
+group licks in a dictionary by harmony
+we'll say that all licks will be 2 beats
+if a lick ends on a chord tone then any next note goes
+if a lick ends half step above the chord tone of the next chord, look
+for a lick that starts on that chord tone

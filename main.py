@@ -2,6 +2,7 @@ from argparse import ArgumentParser
 
 from lick     import licks
 from standard import standards
+from gen      import generate
 
 def lev(a, b):
     """
@@ -25,8 +26,8 @@ def lev(a, b):
 
 if __name__ == "__main__":
     parser = ArgumentParser("Command-line bebop etude generator")
-    parser.add_argument("standard", nargs=1, help="name of the standard")
-    parser.add_argument("-f", "--format", nargs=1, choices=("mid", "abc"), required=True, help="output format")
+    parser.add_argument("standard", help="name of the standard")
+    parser.add_argument("-f", "--format", choices=("mid", "abc"), required=True, help="output format")
     args = parser.parse_args()
 
     generate(
