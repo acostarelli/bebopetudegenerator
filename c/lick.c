@@ -1,18 +1,18 @@
 #include "beg.h"
 
-bool licks_generator(int *lick) {
+bool licks_generator(struct lick *l) {
     static i = 0;
-    if(*lick == NULL) {
+    if(i >= NUM_LICKS) {
         i = 0;
     }
 
-    *lick = licks[i++];
+    *l = licks[i++];
     return i < NUM_LICKS;
 }
 
 bool notes_generator(struct lick l, struct note *n) {
-    static i = 0;
-    if(*n == NULL) {
+    static _i = 0;
+    if(n->notes->dur == 0) {
         i = 0;
     }
 

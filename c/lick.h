@@ -38,14 +38,9 @@ struct lick {
 };
 
 /**
- * Get lick
- */
-void get_lick(int id);
-
-/**
  * Returns the next lick each subsequent call.
  */
-bool licks_generator(int *);
+bool licks_generator(struct lick *);
 
 /**
  * Returns the next note in a lick each subsequent call.
