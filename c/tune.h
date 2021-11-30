@@ -3,12 +3,10 @@
 
 #include "beg.h"
 
-#define NEW_TUNE , -1,
-#define TUNES_LENGTH size(tunes) / size(int);
+#define TUNE_DELIMITER -1
+#define NEW_TUNE , TUNE_DELIMITER,
 
-/**
- * Compile-time structure.
- */
+#define TUNES_LENGTH (size(tunes) / size(int))
 const int tunes[] = {
     /* Blues */
     dom(I), dom(IV), dom(I), dom(I)
@@ -18,10 +16,14 @@ const int tunes[] = {
     M(I), dom(VI), m(II), dom(V)
 };
 
+struct tune {
+    struct chord *chords;
+};
+
 /**
  * Gets a tune by its index.
  */
-int get_tune(int);
+void get_tune(int, struct tune *);
 
 /**
  * Gets the next chord in a tune.
@@ -29,6 +31,6 @@ int get_tune(int);
  * int   -- the tune ID returned from get_tune
  * **int -- int[] = malloc(4);
  */
-void get_chord(int, **int);
+void chords_generator(int, struct chord *);
 
 #endif

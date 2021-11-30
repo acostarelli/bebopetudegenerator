@@ -16,10 +16,20 @@
 #define V   7
 #define VI  9
 #define VII 11
+#define SIV 6
 
-#define sIV 6
+#define CHORD_QUALITY(chord) (chord[0])
+#define CHORD_ROOT(chord)    (chord[1])
 
 enum quality { MAJOR, DOMINANT, MINOR };
+
+struct chord {
+    enum quality quality;
+    int root;
+    int third;
+    int fifth;
+    int seventh;
+};
 
 /**
  * Given a chord root relative to some key, gives the root, third, fifth

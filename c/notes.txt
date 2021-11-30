@@ -1,0 +1,6 @@
+// I can envision something like a state structure for this generator
+// that keeps track of things like last lick current chord and all,
+// and then you create different heuristic functions, and you could
+// try mixing and matching them. The basis of this algorithm is just
+// that pre-defined licks are used, rather than complete arbitrary
+// note generation. Besides that, anything is fair game.

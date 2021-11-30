@@ -5,11 +5,13 @@
 
 /**
  * Stores the file pointer for a MIDI file as well as the number of bytes
- * in the first (and only) track chunk.
+ * in the first (and only) track chunk. Rest is used when a rest is
+ * "added" to the MIDI file.
  */
 struct midi {
     FILE *fp;
     size_t s;
+    int rest;
 };
 
 /**

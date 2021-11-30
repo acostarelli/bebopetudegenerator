@@ -1,6 +1,8 @@
 #ifndef LIB_H
 #define LIB_H
 
+#define LEN(l) size(l) / size(l[0])
+
 /**
  * Calculates the Levenshtein distance between two strings.
  */

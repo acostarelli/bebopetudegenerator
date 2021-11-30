@@ -1,38 +1,38 @@
+#include "beg.h"
+
 int main(int argc, char **argv) {
-    if(argc < 2) {
-        puts("Please add arguments.");
-        return 1;
-    }
-    srand(time(NULL));
+    struct tune t;
+    get_tune(strtol(argv[1], NULL, 10), &t);
 
-    int tune = get_tune(strtol(argv[1]));
-    int chord[5] = NULL;
+    struct etude e;
+    etude_init(&e, t);
 
-    int *options  = malloc(N_LICKS, sizeof(int));
-    int n_options = 0;
+    struct lick *options = malloc(NUM_LICKS * sizeof(struct lick));
+    struct lick *start   = options;
 
-    int last = 0;
-    while(get_chord(tune, &chord)) {
-        // if there is no prior lick, any lick with the matching chord
-        // if the lick has a note on the last 8th note
-        // if that last note is a half step away from any chord tones in
-        //  the next chord
-        // find a lick with the matching chord that starts on the chord tone
-        // else find any lick with the matching chord
-        if(last == 0) {
-            rand() % N_LICKS
-            for(int i = 0; i < N_LICKS; i++) {
-                int lick = get_lick(i);
-                if(harmony(lick) == chord[0]) {
-                    options[n_options++] = lick;
-                }
+    struct chord c;
+    struct lick  l;
+    struct note  n;
+    while(chords_generator(tune, &c)) {
+        while(licks_generator(&l)) {
+            if(l.quality == c.quality) {
+                *options++ = l;
             }
-
-            continue;
         }
 
-        
+        // chord generator returns 2 beats
+        // all licks are 2 beats
+
+        l = options[rand() % (options - start)];
+        while(notes_generator(l, &n)) {
+            n.note += root + c.root;
+            etude_add(&n);
+        }
+
+        options = start;
     }
 
-    return 0;
+    struct mid m;
+    midi_init(&m, "etude.mid");
+    etude_export_mid(&m);
 }

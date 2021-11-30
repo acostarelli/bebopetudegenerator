@@ -1,16 +1,15 @@
 #include "beg.h"
 
-int get_tune(int i) {
-    int ret = 0;
-    int n   = 0;
+int get_tune(int id, struct tune *t) {
+    int n = 0;
 
-    for(int j = 0; j < TUNES_LENGTH-1; j++) {
+    for(int i = 0; i < TUNES_LENGTH-1; i++) {
         if(n == i) {
-            return ret;
+            t->c = i;
+            return 1;
         }
 
-        if(tunes[j] == -1) {
-            ret = tunes[j+1];
+        if(tunes[i] == TUNE_DELIMITER) {
             n++;
         }
     }
@@ -18,12 +17,12 @@ int get_tune(int i) {
     return 0;
 }
 
-bool get_chord(int tune, int **chord) {
-    if(*chord == NULL) {
-        *chord = tunes[tune];
-        return true;
+bool chords_generator(struct tune t, struct chord *c) {
+    static int i = 0;
+    if(*c == 0) {
+        i = 0;
     }
 
-    *chord += 4;
-    return **chord != -1;
+    *c = tune.chords[i++];
+    return *c != TUNE_DELIMITER;
 }

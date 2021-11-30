@@ -1,6 +1,3 @@
-#include <string.h>
-#include <tgmath.h>
-
 #include "beg.h"
 
 size_t lev(char *a, char *b) {
