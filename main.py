@@ -1,36 +1,86 @@
-from argparse import ArgumentParser
+class Event:
+    def __init__(self, note, rhythm):
+        self.__note   = note
+        self.__rhythm = rhythm
 
-from lick     import licks
-from standard import standards
-from gen      import generate
+class Note:
+    I   = 0
+    II  = 2
+    III = 4
+    IV  = 5
+    V   = 7
+    VI  = 9
+    VII = 11
+    REST = 12
 
-def lev(a, b):
-    """
-    Levenshtein distance.
-    """
+class Rhythm:
+    Q = 12
+    E = 6
+    T = 4
+    S = 3
 
-    if len(b) == 0:
-        return len(a)
+# can make this a fancy enum
+class Quality:
+    M   = auto()
+    dom = auto()
+    m   = auto()
 
-    if len(a) == 0:
-        return len(b)
+class Lick:
+    def __init__(self, quality, *events):
+        self.__quality = quality
+        self.__events  = events
 
-    if a[0] == b[0]:
-        return lev(a[1:], b[1:])
+    @property
+    def quality(self):
+        return self.__quality
 
-    return 1 + min(
-        lev(a[1:], b),
-        lev(a, b[1:]),
-        lev(a[1:], b[1:])
-    )
+    def __iter__(self):
+        return self.__events
+
+class Chord:
+    def __init__(self, quality, root):
+        self.__quality = quality
+        self.__root    = root
+
+    @property
+    def quality(self):
+        return self.__quality
+
+class Standard:
+    def __init__(self, *chords):
+        self.__chords = chords
+
+    def __iter__(self):
+        return self.__chords
+
+licks = [
+    Lick(Quality.M, Event())
+]
+
+standards = [
+    Standard(Chord(Quality.M, Note.I))
+]
+
+def v1random(standard):
+    for chord in standard:
+        lick = choice([lick for lick in licks if lick.quality == chord.quality])
+
+        for event in lick:
+            yield event
 
 if __name__ == "__main__":
-    parser = ArgumentParser("Command-line bebop etude generator")
-    parser.add_argument("standard", help="name of the standard")
-    parser.add_argument("-f", "--format", choices=("mid", "abc"), required=True, help="output format")
-    args = parser.parse_args()
+    mid = MidiFile(ticks_per_beat=Note.Q)
+    trk = MidiTrack()
+    mid.tracks.append(trk)
 
-    generate(
-        min(standards, key=lambda s: lev(s.name, args.standard)),
-        licks
-    ).save(args.format)
+    root = 0
+    delay = 0
+    for event in v1random(blues):
+        if event.note == Note.REST:
+            delay += event.rhythm
+            continue
+
+        trk.append(Message("note_on",  note=0, ticks=0))
+        trk.append(Message("note_off", note=0, ticks=event.rhythm+delay))
+
+        delay = 0
