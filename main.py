@@ -1,86 +1,45 @@
-class Event:
-    def __init__(self, note, rhythm):
-        self.__note   = note
-        self.__rhythm = rhythm
+from random import choice
 
-class Note:
-    I   = 0
-    II  = 2
-    III = 4
-    IV  = 5
-    V   = 7
-    VI  = 9
-    VII = 11
-    REST = 12
+from mido import MidiFile, MidiTrack, Message
 
-class Rhythm:
-    Q = 12
-    E = 6
-    T = 4
-    S = 3
-
-# can make this a fancy enum
-class Quality:
-    M   = auto()
-    dom = auto()
-    m   = auto()
-
-class Lick:
-    def __init__(self, quality, *events):
-        self.__quality = quality
-        self.__events  = events
-
-    @property
-    def quality(self):
-        return self.__quality
-
-    def __iter__(self):
-        return self.__events
-
-class Chord:
-    def __init__(self, quality, root):
-        self.__quality = quality
-        self.__root    = root
-
-    @property
-    def quality(self):
-        return self.__quality
-
-class Standard:
-    def __init__(self, *chords):
-        self.__chords = chords
-
-    def __iter__(self):
-        return self.__chords
-
-licks = [
-    Lick(Quality.M, Event())
-]
-
-standards = [
-    Standard(Chord(Quality.M, Note.I))
-]
+from music import Rhythm, Event, Note
+from standards import standards
+from licks import licks
 
 def v1random(standard):
+    key = 60
+    last = None
     for chord in standard:
         lick = choice([lick for lick in licks if lick.quality == chord.quality])
 
+        correction = 0
+        if last and last != Note.REST and lick.first.note != Note.REST:
+            correction = -12 * int(((key + chord.root + lick.first.note) - last) / 12)
+
         for event in lick:
-            yield event
+            last = key + chord.root + event.note + correction
+            yield Event(last, event.rhythm)
+
+
+"""
+1. no weird octaves
+2. smarter lick selection
+"""
 
 if __name__ == "__main__":
-    mid = MidiFile(ticks_per_beat=Note.Q)
+    mid = MidiFile(ticks_per_beat=Rhythm.Q)
     trk = MidiTrack()
     mid.tracks.append(trk)
 
-    root = 0
     delay = 0
-    for event in v1random(blues):
+    for event in v1random(standards[0]):
         if event.note == Note.REST:
             delay += event.rhythm
             continue
 
-        trk.append(Message("note_on",  note=0, ticks=0))
-        trk.append(Message("note_off", note=0, ticks=event.rhythm+delay))
+        trk.append(Message("note_on",  note=event.note, time=delay))
+        trk.append(Message("note_off", note=event.note, time=event.rhythm))
 
         delay = 0
+
+    mid.save("etude.mid")
