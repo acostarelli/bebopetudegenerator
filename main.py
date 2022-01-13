@@ -45,7 +45,7 @@ def weighter(lick, last, chord):
     if lick.quality != chord.quality:
         return 0
 
-    diff = abs((last % 12) - (chord.root + lick.firstz.note) % 12)
+    diff = abs((last % 12) - (chord.root + lick.first.note) % 12)
     #[abs(((tone + chord.root) % 12) - (last % 12)) for tone in chord.quality]
     diff = diff - (12 * (diff // 6))
     if diff == 1: # this is flawed... licks that aren't 1 away will get away with this
@@ -77,18 +77,53 @@ def v1random(standard):
             print("cock", first, chord.root, lick.first.note)
             first = [0, 1, 2, 3, 4, 5, 6, -5, -4, -3, -2, -1][first]
 
-            first = first + (12 * round(last / 12))
+            print("m ", first)
+            print("n ", last)
+            print((-1/12) * (first - last - 6), (-1/12) * (first - last + 6))
+            print(int((-1/12) * (first - last - 6)))
+
+            first = first + 12*(int((-1/12) * (first - last - 6)))
+            #first = first + (12 * round(last / 12))
 
             events = [Event(first, lick[0].rhythm)] + [Event(first + event.note, event.rhythm) for event in lick[1:]]
             print([event.note for event in lick])
             print([event.note for event in events])
+            print("#")
+
+            #iterbreak(3)
+
             if all((event.note >= 61 and event.note <= 92) or event.note == Note.REST for event in events):
                 break
 
         print("-------------")
-        #iterbreak(10)
+
         yield from events
         last = next(event for event in reversed(events) if event.note != Note.REST).note
+
+"""
+
+-5 <= n <= 6    (first note)
+0 <= m <= 127   (last note)
+0 < c <= 10     (octave multiplier)
+
+j = n + 12c     (realized first note)
+|m - j| <= 6    (under a tritone away)
+
+-6 <= m - n - 12c <= 6
+
+------------
+
+|m - n - 12c| <= 6
+
+m - n - 12c <= 6
+-m + n + 12c >= -6
+12c >= n - m - 6
+c >= (n - m - 6) / 12
+
+m - n - 12c <= -6
+
+
+"""
 
 if __name__ == "__main__":
     mid = MidiFile(ticks_per_beat=Rhythm.Q)
