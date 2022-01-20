@@ -61,16 +61,22 @@ class Rhythm:
     m   = 2
     pu  = 3"""
 
+# can i do class Quality(Enum, list)
+"""
+class Quality(list, Enum):
+    M   = (Note.III,  Note.V, Note.VII)
+    dom = (Note.III,  Note.V, Note.bVII)
+    m   = (Note.bIII, Note.V, Note.bVII)
+    pu  = None
+    def __init__(self, *args):
+        super().__init__(args)
+"""
+
 class Quality(Enum):
-    M   = (Note.III, Note.V, Note.VII)
-    dom = (Note.III, Note.V, Note.bVII)
+    M   = (Note.III,  Note.V, Note.VII)
+    dom = (Note.III,  Note.V, Note.bVII)
     m   = (Note.bIII, Note.V, Note.bVII)
     pu  = (0, 0, 0)
-
-    def __init__(self, third, fifth, seventh):
-        self.__third = third
-        self.__fifth = fifth
-        self.__seventh = seventh
 
     @property
     def third(self):
@@ -84,10 +90,19 @@ class Quality(Enum):
     def seventh(self):
         return self.__seventh
 
+    def __init__(self, third, fifth, seventh):
+        self.__third = third
+        self.__fifth = fifth
+        self.__seventh = seventh
+
+    def __getitem__(self, i):
+        return [0, self.__third, self.__fifth, self.__seventh][i]
+
     def __eq__(self, t):
         return self.third == t.third and self.fifth == t.fifth and self.seventh == t.seventh
 
     def __iter__(self):
+        yield Note.I # breaks shit
         yield self.__third
         yield self.__fifth
         yield self.__seventh

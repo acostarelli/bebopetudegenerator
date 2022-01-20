@@ -1,7 +1,7 @@
-from random import choice, choices
+from random import choice, choices, randrange
 from itertools import combinations
 
-from mido import MidiFile, MidiTrack, Message
+from mido import MidiFile, MidiTrack, Message, MetaMessage, bpm2tempo
 
 from music import Rhythm, Event, Note
 from standards import standards
@@ -14,6 +14,7 @@ iterbreak_n = -1
 def iterbreak(n):
     global iterbreak_n
     if iterbreak_n == 1:
+        print("ITERBROKEN")
         sys.exit(1)
 
     if iterbreak_n != -1:
@@ -35,103 +36,80 @@ the caller can determine the weight
 - maybe if there is a half stepper, just block all others...
 """
 
-def chrommy(lick):
-    return sum(abs(a-b) for a, b in combinations([0] + [event.note for note in lick[1:]], 2)) / len(lick)
+def closest_octave(n, t):
+    """
+    n -- the pitch to correct
+    t -- the target pitch
 
-### 61 to 92
+    Returns a new n pitch such that it is no more than a tritone away from t.
+
+    r = n + 12c   (r is the same note as n but as close to m as possible)
+    |t - r| <= 6  (solve for c, return r)
+    """
+    return n + 12 * int((1/12) * (-n + t + 6))
+
+def diff(n, t):
+    """
+    Returns the difference between n and t <= a tritone.
+    """
+    return abs(t - closest_octave(n, t))
+
 def weighter(lick, last, chord):
-    weight = 0
-
+    """
+    - Throw out any licks that don't match chord quality
+    - If the last note is a half-step from a chord tone
+        - Keep this lick if it starts on that chord tone
+        - Toss if it doesn't
+    - Keep this lick if it's 1, 2, or 3 half-steps away from the last note
+    """
     if lick.quality != chord.quality:
         return 0
 
-    diff = abs((last % 12) - (chord.root + lick.first.note) % 12)
-    #[abs(((tone + chord.root) % 12) - (last % 12)) for tone in chord.quality]
-    diff = diff - (12 * (diff // 6))
-    if diff == 1: # this is flawed... licks that aren't 1 away will get away with this
-    # you want to say: if the last note is a half step away from a chord tone, choose licks that start on that chord tone
-        if lick.first.note in chord.quality:
-            return 1
-        else:
-            return 0
-        #return 1
-    elif diff in [2, 3]:
-        return 1
+    try:
+        tone = chord.quality[
+            next(i
+                for i, diff
+                in enumerate(
+                    diff(tone + chord.root, last)
+                    for tone
+                    in chord.quality)
+                if diff == 1)
+        ]
 
-    return 0
+        if not (61 <= closest_octave(tone + chord.root, last) <= 92):
+            raise StopIteration
+
+        return lick.first.note == tone
+
+    except StopIteration:
+        return diff(lick.first.note + chord.root, last) in range(1, 5) # maybe allow greater for like major chords
 
 def v1random(standard):
-    last = 72
+    last = randrange(72, 84)
     events = []
-    for chord in standard:
-        print("chord:", chord.root)
-        print("last:", last)
-        # could make this into a generator, and use next() to get the lick that stays within range
-        # one part selects the lick, the next part turns it into real notes
+    for i, chord in enumerate(standard):
         while True:
-            #i, lick = choices(list(enumerate(licks)), weights=[weighter(lick, last, chord) for lick in licks])[0]
-            i, lick = choices(list(enumerate(licks)))[0]
-            print("lick:", i+1)
-            #first = (((chord.root + lick[0].note) % 12) - 6) + (12 * round(last / 12))
-            first = (chord.root + lick.first.note) % 12
-            print("cock", first, chord.root, lick.first.note)
-            first = [0, 1, 2, 3, 4, 5, 6, -5, -4, -3, -2, -1][first]
+            lick = choices(licks, weights=[weighter(lick, last, chord) for lick in licks])[0]
+            first = closest_octave(chord.root + lick.first.note, last)
 
-            print("m ", first)
-            print("n ", last)
-            print((-1/12) * (first - last - 6), (-1/12) * (first - last + 6))
-            print(int((-1/12) * (first - last - 6)))
-
-            first = first + 12*(int((-1/12) * (first - last - 6)))
-            #first = first + (12 * round(last / 12))
-
+            # this will totally break if the first event is a rest
             events = [Event(first, lick[0].rhythm)] + [Event(first + event.note, event.rhythm) for event in lick[1:]]
-            print([event.note for event in lick])
-            print([event.note for event in events])
-            print("#")
-
-            #iterbreak(3)
 
             if all((event.note >= 61 and event.note <= 92) or event.note == Note.REST for event in events):
                 break
 
-        print("-------------")
-
         yield from events
         last = next(event for event in reversed(events) if event.note != Note.REST).note
-
-"""
-
--5 <= n <= 6    (first note)
-0 <= m <= 127   (last note)
-0 < c <= 10     (octave multiplier)
-
-j = n + 12c     (realized first note)
-|m - j| <= 6    (under a tritone away)
-
--6 <= m - n - 12c <= 6
-
-------------
-
-|m - n - 12c| <= 6
-
-m - n - 12c <= 6
--m + n + 12c >= -6
-12c >= n - m - 6
-c >= (n - m - 6) / 12
-
-m - n - 12c <= -6
-
-
-"""
 
 if __name__ == "__main__":
     mid = MidiFile(ticks_per_beat=Rhythm.Q)
     trk = MidiTrack()
     mid.tracks.append(trk)
 
+    trk.append(MetaMessage("set_tempo", tempo=bpm2tempo(240)))
+
     delay = 0
-    for event in v1random(standards[0]):
+    for event in v1random(standards[2]):
         if event.note == Note.REST:
             delay += event.rhythm
             continue
@@ -140,5 +118,11 @@ if __name__ == "__main__":
         trk.append(Message("note_off", note=event.note, time=event.rhythm))
 
         delay = 0
+
+    bkg = MidiTrack()
+    mid.tracks.append(bkg)
+    for chord in standards[2]:
+        bkg.append(Message("note_on",  note=chord.root+36, time=0))
+        bkg.append(Message("note_off", note=chord.root+36, time=Rhythm.Q+Rhythm.Q))
 
     mid.save("etude.mid")
